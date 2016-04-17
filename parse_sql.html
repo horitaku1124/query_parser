@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+<script src="js/query_parser.js"></script>
 <meta charset="UTF-8">
 <title>SQL</title>
 <script type="text/javascript">
@@ -21,137 +22,10 @@
             age: 19
         }
     ];
-    const TYPE_NONE = 0,
-          TYPE_COLUMN = 1,
-          TYPE_FROM = 2,
-          TYPE_WHERE = 3;
-    function exeVerse(type, querySet, verse) {
-        if(type == TYPE_COLUMN) {
-            querySet.columns.push(verse);
-        }
-        if(type == TYPE_FROM) {
-            querySet.froms.push(verse);
-        }
-        if(type == TYPE_WHERE) {
-            querySet.wheres.push(verse);
-        }
-        console.log(verse);
-    }
     function convert() {
-        var querySet = {
-            columns: [],
-            froms: [],
-            wheres: []
-        };
-        const sql = document.getElementById('sql').value;
-
-        var verse = "";
-        var queryTypeDecided = false;
-        var queryType;
-        var type = TYPE_NONE;
-        console.group();
-        var quote = null;
-        for(let i = 0;i < sql.length;i++) {
-            const char = sql[i];
-            if(quote != null) {
-                if(char == quote) {
-                    quote = null;
-                    exeVerse(type, querySet, verse);
-                    verse = "";
-                } else {
-                    verse += char;
-                }
-                continue;
-            }
-            if(char === '\'' || char === '"' || char === '`') {
-                quote = char;
-            } else if(char === ' ' || char === '\t' || char === '\r' || char === '\n') {
-                var verse2 = verse.toLowerCase();
-                if(verse2 == "select") {
-                    type = TYPE_COLUMN;
-                    queryType = verse2;
-                    queryTypeDecided = true;
-                } else if(verse2 == "from") {
-                    type = TYPE_FROM;
-                } else if(verse2 == "where") {
-                    type = TYPE_WHERE;
-                } else {
-                    if(verse != "") {
-                        exeVerse(type, querySet, verse);
-                    }
-                }
-                verse = "";
-            } else if(char === ',') {
-                exeVerse(type, querySet, verse);
-                verse = "";
-            } else {
-                verse += char;
-            }
-        }
-        if(verse != "") {
-            exeVerse(type, querySet, verse);
-        }
-        console.groupEnd();
-        console.log("QueryType=", queryType);
-        console.log("querySet.columns=", querySet.columns);
-        console.log("querySet.froms=", querySet.froms);
-        console.log("querySet.wheres=", querySet.wheres);
-
-        var data = {};
-        console.group();
-        for(let from of querySet.froms) {
-            data[from] = window[from];
-        }
-        console.log("data", data);
-
-        var keyToColumn = {};
-
-        for(let i in data) {
-            var keys = Object.keys(data[i][0]);
-            for(let column of querySet.columns) {
-                let index = keys.indexOf(column);
-                if(index >= 0) {
-                    keys.indexOf(column);
-                    keyToColumn[column] = [i, column];
-                }
-            }
-        }
-        console.log("keyToColumn", keyToColumn);
-
-
-        for(let from of querySet.froms) {
-            let target = data[from];
-            for(let i = 0;i < target.length;i++) {
-                let row = target[i];
-
-                let index = 0;
-                let rowIsMatched = true;
-                while(index < querySet.wheres.length) {
-                    let left = querySet.wheres[index];
-                    let operation = querySet.wheres[index + 1];
-                    let right = querySet.wheres[index + 2];
-                    if(operation == "=") {
-                        if(row[left] != right) {
-                            rowIsMatched = false;
-                            break;
-                        }
-                    }
-
-                    index += 3;
-                }
-                if(!rowIsMatched) {
-                    continue;
-                }
-
-                let record = [];
-                for(let column of querySet.columns) {
-                    record.push(row[column]);
-                }
-                console.log(record);
-            }
-        }
-
-        console.groupEnd();
+        var sql = document.getElementById('sql').value;
+        var parser = new QueryParser(window);
+        parser.convert(sql)
     }
     window.onload = function() {
         convert();
