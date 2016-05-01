@@ -4,7 +4,14 @@ const TYPE_NONE = 0,
     TYPE_WHERE = 3;
 
 const NODE_TYPE_SELECT = 1,
-    NODE_TYPE_UPDATE = 2;
+    NODE_TYPE_UPDATE = 2,
+    NODE_TYPE_INSERT = 3,
+    NODE_TYPE_DELETE = 4;
+
+const NODE_CHILD_TYPE_COLUMN = 1001,
+    NODE_CHILD_TYPE_FROM = 1002,
+    NODE_CHILD_TYPE_WHERE = 1003;
+
 class Node {
     get type() {
         return this._type;
@@ -27,6 +34,34 @@ class Node {
     set children(children) {
         this._children = children;
     }
+
+    addChild(node) {
+        if(typeof this._children == 'undefined') {
+            this._children = [];
+        }
+        this._children.push(node);
+    }
+}
+
+function printSyntaxTree(node, indent = 0) {
+    let indentSpace = new Array(indent).join(" ");
+    if(node.type == NODE_CHILD_TYPE_COLUMN) {
+        console.log("NODE_COLUMN");
+    }
+    if(node.type == NODE_CHILD_TYPE_FROM) {
+        console.log("NODE_FROM");
+    }
+    if(node.type == NODE_CHILD_TYPE_WHERE) {
+        console.log("NODE_WHERE");
+    }
+    if(node.value) {
+        console.log(indentSpace + node.value)
+    }
+    if(node.children) {
+        for(let child of node.children) {
+            printSyntaxTree(child, indent + 2);
+        }
+    }
 }
 
 class QueryParser {
@@ -42,12 +77,15 @@ class QueryParser {
             queryTokens.froms.push(verse);
         }
         if(type == TYPE_WHERE) {
+            if(/^and$/i.test(verse)) {
+                verse = verse.toUpperCase();
+            }
             queryTokens.wheres.push(verse);
         }
         console.log(verse);
     }
 
-    makeSyntaxTree(queryType, queryTokens)
+    static makeSyntaxTree(queryType, queryTokens)
     {
         var root = new Node();
         switch (queryType) {
@@ -57,7 +95,7 @@ class QueryParser {
             case "update":
                 root.type = NODE_TYPE_UPDATE;
                 break;
-            case "inser":
+            case "insert":
                 root.type = NODE_TYPE_INSERT;
                 break;
             case "delete":
@@ -66,6 +104,67 @@ class QueryParser {
             default:
                 throw Error("error");
                 break;
+        }
+
+        {
+            var columnNode = new Node();
+            columnNode.type = NODE_CHILD_TYPE_COLUMN;
+
+            for(let i = 0;i < queryTokens.columns.length;i++) {
+                let column = queryTokens.columns[i];
+                if(column != ",") {
+                    let node = new Node();
+                    node.value = column;
+                    columnNode.addChild(node);
+                }
+            }
+            root.addChild(columnNode);
+        }
+        {
+            var fromNode = new Node();
+            fromNode.type = NODE_CHILD_TYPE_FROM;
+
+            for(let i = 0;i < queryTokens.froms.length;i++) {
+                let column = queryTokens.froms[i];
+                if(column != ",") {
+                    let node = new Node();
+                    node.value = column;
+                    fromNode.addChild(node);
+                }
+            }
+            root.addChild(fromNode);
+        }
+        {
+            var whereNode = new Node();
+            whereNode.type = NODE_CHILD_TYPE_WHERE;
+
+            var length = queryTokens.wheres.length;
+            for(let i = 0;i < length;i++) {
+                let column = queryTokens.wheres[i];
+
+                if(column == ",") {
+                    continue;
+                }
+                if(column == "AND") {
+                    let node = new Node();
+                    node.value = "AND";
+                    whereNode.addChild(node);
+                    continue;
+                }
+                var formulas = [column];
+                for(let j = 0;j < 2;j++) {
+                    if((i + 2 <= length) &&  queryTokens.wheres[i + 1] != "and") {
+                        formulas.push(queryTokens.wheres[i + 1]);
+                        i++;
+                    } else {
+                        break;
+                    }
+                }
+                let node = new Node();
+                node.value = formulas;
+                whereNode.addChild(node);
+            }
+            root.addChild(whereNode);
         }
         return root;
     }
@@ -137,9 +236,10 @@ class QueryParser {
         for(let from of queryTokens.froms) {
             data[from] = this._global[from];
         }
-        console.log("makeSyntaxTree", this.makeSyntaxTree(queryType, queryTokens));
 
-/*
+        var syntaxTree = QueryParser.makeSyntaxTree(queryType, queryTokens);
+        console.log("makeSyntaxTree", syntaxTree);
+
         console.group();
         console.log("data", data);
 
@@ -147,7 +247,9 @@ class QueryParser {
 
         for(let i in data) {
             var keys = Object.keys(data[i][0]);
-            for(let column of queryTokens.columns) {
+            var columnNodes = syntaxTree.children[0];
+            for(let columnNode of columnNodes.children) {
+                var column = columnNode.value;
                 let index = keys.indexOf(column);
                 if(index >= 0) {
                     keys.indexOf(column);
@@ -156,40 +258,9 @@ class QueryParser {
             }
         }
         console.log("keyToColumn", keyToColumn);
-
-        for(let from of queryTokens.froms) {
-            let target = data[from];
-            for(let i = 0;i < target.length;i++) {
-                let row = target[i];
-
-                let index = 0;
-                let rowIsMatched = true;
-                while(index < queryTokens.wheres.length) {
-                    let left = queryTokens.wheres[index];
-                    let operation = queryTokens.wheres[index + 1];
-                    let right = queryTokens.wheres[index + 2];
-                    if(operation == "=") {
-                        if(row[left] != right) {
-                            rowIsMatched = false;
-                            break;
-                        }
-                    }
-
-                    index += 3;
-                }
-                if(!rowIsMatched) {
-                    continue;
-                }
-
-                let record = [];
-                for(let column of queryTokens.columns) {
-                    record.push(row[column]);
-                }
-                console.log(record);
-            }
-        }
-
+        console.group();
+        printSyntaxTree(syntaxTree);
         console.groupEnd();
-        */
+        console.groupEnd();
     }
 }
