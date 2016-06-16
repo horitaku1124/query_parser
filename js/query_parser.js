@@ -64,6 +64,85 @@ function printSyntaxTree(node, indent = 0) {
     }
 }
 
+function fromToDataSource(dataScope, froms) {
+    var dataSorce = {};
+    for(var from of froms) {
+        dataSorce[from] = dataScope[from];
+    }
+    return dataSorce;
+}
+
+function mergeTables(dataSource) {
+    returnSource = [];
+    for(var table in dataSource) {
+        returnSource = dataSource[table];
+    }
+    return returnSource;
+}
+
+function filterByWhere(dataSource, wheres, selectors) {
+    var resultSource = [];
+    for(let i = 0;i < dataSource.length;i++) {
+        var row = dataSource[i];
+        var resultRow = [];
+        for(let j = 0;j < wheres.length;j += 2) {
+            var subject = row[wheres[j][0]];
+            var expression = wheres[j][1];
+            var object = wheres[j][2];
+            var result = false;
+            switch (expression) {
+                case "=":
+                    result = subject == object;
+                    break;
+                case ">":
+                    result = subject > object;
+                    break;
+                case "<":
+                    result = subject < object;
+                    break;
+            }
+            resultRow.push(result);
+
+            if(wheres[j + 1]) {
+                resultRow.push(wheres[j + 1].toUpperCase());
+            }
+        }
+
+        while(resultRow.length > 2) {
+            var newRow = [];
+            for(j = 0;j < resultRow.length;j += 4) {
+                var left = resultRow[j], right = resultRow[j + 2];
+                var expression = resultRow[j + 1];
+
+                var result = false;
+                switch (expression) {
+                    case "AND":
+                        result = left && right;
+                        break;
+                    case "OR":
+                        result = left || right;
+                        break;
+                }
+                newRow.push(result);
+                if(resultRow[j + 3]) {
+                    newRow.push(resultRow[j + 3]);
+                }
+            }
+            resultRow = newRow;
+        }
+        if(resultRow.length == 1) {
+            if(resultRow[0]) {
+                var newRow = {};
+                for(var key of selectors) {
+                    newRow[key] = row[key];
+                }
+                resultSource.push(newRow);
+            }
+        }
+    }
+    return resultSource;
+}
+
 class QueryParser {
     constructor(global)
     {
@@ -262,5 +341,31 @@ class QueryParser {
         printSyntaxTree(syntaxTree);
         console.groupEnd();
         console.groupEnd();
+
+        var selectors = [], froms = [], wheres = [];
+        for(let i = 0;i < syntaxTree.children.length;i++) {
+            let node = syntaxTree.children[i];
+            if(node.type == NODE_CHILD_TYPE_COLUMN) {
+                for(let child of node.children) {
+                    selectors.push(child.value);
+                }
+            }
+            if(node.type == NODE_CHILD_TYPE_FROM) {
+                for(let child of node.children) {
+                    froms.push(child.value);
+                }
+            }
+            if(node.type == NODE_CHILD_TYPE_WHERE) {
+                for(let child of node.children) {
+                    wheres.push(child.value);
+                }
+            }
+        }
+        let dataSource = fromToDataSource(window, froms);
+        console.log(dataSource);
+        dataSource = mergeTables(dataSource);
+
+        dataSource = filterByWhere(dataSource, wheres, selectors);
+        console.log(dataSource);
     }
 }
