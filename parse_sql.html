@@ -9,17 +9,30 @@
         {
             id: 1,
             name: "taro",
-            age: 26
+            age: 26,
+            division: 100,
+            is_expired: 0
         },
         {
             id: 2,
             name: "kotaro",
-            age: 31
+            age: 31,
+            division: 100,
+            is_expired: 1
         },
         {
             id: 3,
             name: "santaro",
-            age: 19
+            age: 19,
+            division: 200,
+            is_expired: 0
+        },
+        {
+            id: 4,
+            name: "shiro",
+            age: 20,
+            division: 200,
+            is_expired: 0
         }
     ];
     function convert() {
@@ -35,7 +48,7 @@
 <body>
 <input type="button" value="Convert" onclick="convert();" />
 <div>
-<textarea id="sql" style="width: 500px;height:300px;">SELECT id,name FROM `ad_repetitions` WHERE id = 1 AND age > 20</textarea>
+<textarea id="sql" style="width: 500px;height:300px;">SELECT id,name FROM `ad_repetitions` WHERE division = 100 AND age > 20 AND is_expired &lt;&gt; 1</textarea>
 </div>
 
 </body>
