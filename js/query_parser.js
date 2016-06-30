@@ -118,26 +118,23 @@ function filterByWhere(dataSource, wheres, selectors) {
                 resultRow.push(wheres[j + 1].toUpperCase());
             }
         }
-
         while(resultRow.length > 2) {
             var newRow = [];
-            for(j = 0;j < resultRow.length;j += 4) {
-                var left = resultRow[j], right = resultRow[j + 2];
-                var expression = resultRow[j + 1];
+            var left = resultRow[0], right = resultRow[2];
+            var expression = resultRow[1];
 
-                var result = false;
-                switch (expression) {
-                    case "AND":
-                        result = left && right;
-                        break;
-                    case "OR":
-                        result = left || right;
-                        break;
-                }
-                newRow.push(result);
-                if(resultRow[j + 3]) {
-                    newRow.push(resultRow[j + 3]);
-                }
+            var result = false;
+            switch (expression) {
+                case "AND":
+                    result = left && right;
+                    break;
+                case "OR":
+                    result = left || right;
+                    break;
+            }
+            newRow.push(result);
+            for(let j = 3;j < resultRow.length;j++) {
+                newRow.push(resultRow[j]);
             }
             resultRow = newRow;
         }
