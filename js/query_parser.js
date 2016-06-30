@@ -134,7 +134,13 @@ function filterByWhere(dataSource, wheres, selectors) {
             if(resultRow[0]) {
                 var newRow = {};
                 for(var key of selectors) {
-                    newRow[key] = row[key];
+                    if(key == "*") {
+                        for(var key2 in row) {
+                            newRow[key2] = row[key2];
+                        }
+                    } else {
+                        newRow[key] = row[key];
+                    }
                 }
                 resultSource.push(newRow);
             }
