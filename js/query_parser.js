@@ -8,11 +8,19 @@ const NODE_TYPE_SELECT = 1,
     NODE_TYPE_INSERT = 3,
     NODE_TYPE_DELETE = 4;
 
-const NODE_CHILD_TYPE_COLUMN = 1001,
+const NODE_VALUE = 1,
+    NODE_CHILD_TYPE_COLUMN = 1001,
     NODE_CHILD_TYPE_FROM = 1002,
     NODE_CHILD_TYPE_WHERE = 1003;
 
 class Node {
+    constructor(type, value) {
+        this._type = type;
+        if(typeof value !== "undefined") {
+            this._value = value;
+        }
+    }
+
     get type() {
         return this._type;
     }
@@ -192,36 +200,31 @@ class QueryParser {
         }
 
         {
-            var columnNode = new Node();
-            columnNode.type = NODE_CHILD_TYPE_COLUMN;
+            var columnNode = new Node(NODE_CHILD_TYPE_COLUMN);
 
             for(let i = 0;i < queryTokens.columns.length;i++) {
                 let column = queryTokens.columns[i];
                 if(column != ",") {
-                    let node = new Node();
-                    node.value = column;
+                    let node = new Node(NODE_VALUE, column);
                     columnNode.addChild(node);
                 }
             }
             root.addChild(columnNode);
         }
         {
-            var fromNode = new Node();
-            fromNode.type = NODE_CHILD_TYPE_FROM;
+            var fromNode = new Node(NODE_CHILD_TYPE_FROM);
 
             for(let i = 0;i < queryTokens.froms.length;i++) {
                 let column = queryTokens.froms[i];
                 if(column != ",") {
-                    let node = new Node();
-                    node.value = column;
+                    let node = new Node(NODE_VALUE, column);
                     fromNode.addChild(node);
                 }
             }
             root.addChild(fromNode);
         }
         {
-            var whereNode = new Node();
-            whereNode.type = NODE_CHILD_TYPE_WHERE;
+            var whereNode = new Node(NODE_CHILD_TYPE_WHERE);
 
             var length = queryTokens.wheres.length;
             for(let i = 0;i < length;i++) {
@@ -231,8 +234,7 @@ class QueryParser {
                     continue;
                 }
                 if(column == "AND") {
-                    let node = new Node();
-                    node.value = "AND";
+                    let node = new Node(NODE_VALUE, "AND");
                     whereNode.addChild(node);
                     continue;
                 }
@@ -245,8 +247,7 @@ class QueryParser {
                         break;
                     }
                 }
-                let node = new Node();
-                node.value = formulas;
+                let node = new Node(NODE_VALUE, formulas);
                 whereNode.addChild(node);
             }
             root.addChild(whereNode);
