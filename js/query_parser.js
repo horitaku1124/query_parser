@@ -99,6 +99,9 @@ function filterByWhere(dataSource, wheres, selectors) {
             var object = wheres[j][2];
             var result = false;
             switch (expression) {
+                case "<>":
+                    result = subject != object;
+                    break;
                 case "=":
                     result = subject == object;
                     break;
