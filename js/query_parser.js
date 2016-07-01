@@ -318,35 +318,11 @@ class QueryParser {
         console.log("queryTokens.froms=", queryTokens.froms);
         console.log("queryTokens.wheres=", queryTokens.wheres);
 
-        var data = {};
-        for(let from of queryTokens.froms) {
-            data[from] = this._global[from];
-        }
-
         var syntaxTree = QueryParser.makeSyntaxTree(queryType, queryTokens);
         console.log("makeSyntaxTree", syntaxTree);
 
         console.group();
-        console.log("data", data);
-
-        var keyToColumn = {};
-
-        for(let i in data) {
-            var keys = Object.keys(data[i][0]);
-            var columnNodes = syntaxTree.children[0];
-            for(let columnNode of columnNodes.children) {
-                var column = columnNode.value;
-                let index = keys.indexOf(column);
-                if(index >= 0) {
-                    keys.indexOf(column);
-                    keyToColumn[column] = [i, column];
-                }
-            }
-        }
-        console.log("keyToColumn", keyToColumn);
-        console.group();
         printSyntaxTree(syntaxTree);
-        console.groupEnd();
         console.groupEnd();
 
         var selectors = [], froms = [], wheres = [];
@@ -368,11 +344,10 @@ class QueryParser {
                 }
             }
         }
-        let dataSource = fromToDataSource(window, froms);
+        let dataSource = fromToDataSource(this._global, froms);
         console.log(dataSource);
         dataSource = mergeTables(dataSource);
-
         dataSource = filterByWhere(dataSource, wheres, selectors);
-        console.log(dataSource);
+        return dataSource;
     }
 }
