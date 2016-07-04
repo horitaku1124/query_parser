@@ -35,10 +35,37 @@
             is_expired: 0
         }
     ];
+    var division_table = [
+        {div_id: 100, div_name: "Development"},
+        {div_id: 200, div_name: "Operation"},
+    ];
     function convert() {
         var sql = document.getElementById('sql').value;
         var parser = new QueryParser(window);
-        parser.convert(sql)
+        var dataSource = parser.convert(sql);
+        if(dataSource.length > 0) {
+            var names = Object.keys(dataSource[0]);
+
+            var table = "<table>";
+            table += "<tr>";
+            for(let name of names) {
+                table += "<th>" + name + "</th>";
+            }
+            table += "</tr>";
+
+            for(let i = 0;i < dataSource.length;i++) {
+                table += "<tr>";
+                for(let name of names) {
+                    table += "<td>" + dataSource[i][name] + "</td>";
+                }
+                table += "</tr>";
+            }
+
+
+            table += "</table>";
+            document.getElementById('result').innerHTML = table;
+        }
+        console.log(dataSource);
     }
     window.onload = function() {
         convert();
@@ -48,8 +75,10 @@
 <body>
 <input type="button" value="Convert" onclick="convert();" />
 <div>
-<textarea id="sql" style="width: 500px;height:300px;">SELECT id,name FROM `ad_repetitions` WHERE division = 100 AND age > 20 AND is_expired &lt;&gt; 1</textarea>
+<textarea id="sql" style="width: 500px;height:300px;">SELECT id,name,div_id,div_name FROM `ad_repetitions` INNER JOIN `division_table` ON division = div_id  WHERE division = 100 AND age > 20 AND is_expired &lt;&gt; 1</textarea>
 </div>
+
+<div id="result"></div>
 
 </body>
 </html>

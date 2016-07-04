@@ -16,9 +16,7 @@ const NODE_VALUE = 1,
 class Node {
     constructor(type, value) {
         this._type = type;
-        if(typeof value !== "undefined") {
-            this._value = value;
-        }
+        this._value = value;
     }
 
     get type() {
@@ -73,19 +71,54 @@ function printSyntaxTree(node, indent = 0) {
 }
 
 function fromToDataSource(dataScope, froms) {
-    var dataSorce = {};
-    for(var from of froms) {
-        dataSorce[from] = dataScope[from];
-    }
-    return dataSorce;
-}
+    console.log("froms", froms);
 
-function mergeTables(dataSource) {
-    returnSource = [];
-    for(var table in dataSource) {
-        returnSource = dataSource[table];
+    var baseTable = [];
+    if(froms.length > 0) {
+        baseTable = dataScope[froms[0]];
     }
-    return returnSource;
+    console.log("baseTable", baseTable);
+
+    for(let i = 1;i < froms.length;i++) {
+        var next = froms[i];
+        var next2 = froms[i + 1];
+        if(next == "JOIN") {
+            next = "LEFT";
+            next2 = "JOIN";
+        }
+        i += 2;
+        if(next == "INNER" && next2 == "JOIN") {
+            var newBaseTable = [];
+            var joinTable = dataScope[froms[i]];
+            var joinOn = froms[i + 1] == "ON";
+            var joinLeft = joinOn ? froms[i + 2] : null,
+                joinExpression = joinOn ? froms[i + 3] : null,
+                joinRight = joinOn ? froms[i + 4] : null;
+            for(let j = 0;j < baseTable.length;j++) {
+                for(let k = 0;k < joinTable.length;k++) {
+                    if (joinOn) {
+                        var left = baseTable[j][joinLeft], right = joinTable[k][joinRight];
+                        var result = false;
+                        switch(joinExpression) {
+                            case "=":
+                                result = left == right;
+                                break;
+                        }
+                        if(!result) continue;
+                    }
+                    var newRow = {};
+                    Object.assign(newRow, baseTable[j]);
+                    Object.assign(newRow, joinTable[k]);
+                    var leftValue = 
+                    newBaseTable.push(newRow);
+                }
+            }
+            baseTable = newBaseTable;
+        }
+    }
+    console.log("baseTable", baseTable);
+
+    return baseTable;
 }
 
 function filterByWhere(dataSource, wheres, selectors) {
@@ -346,7 +379,6 @@ class QueryParser {
         }
         let dataSource = fromToDataSource(this._global, froms);
         console.log(dataSource);
-        dataSource = mergeTables(dataSource);
         dataSource = filterByWhere(dataSource, wheres, selectors);
         return dataSource;
     }
