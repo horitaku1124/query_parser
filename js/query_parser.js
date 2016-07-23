@@ -1,7 +1,8 @@
 const TYPE_NONE = 0,
     TYPE_COLUMN = 1,
     TYPE_FROM = 2,
-    TYPE_WHERE = 3;
+    TYPE_WHERE = 3,
+    TYPE_VALUES = 4;
 
 const NODE_TYPE_SELECT = 1,
     NODE_TYPE_UPDATE = 2,
@@ -11,7 +12,9 @@ const NODE_TYPE_SELECT = 1,
 const NODE_VALUE = 1,
     NODE_CHILD_TYPE_COLUMN = 1001,
     NODE_CHILD_TYPE_FROM = 1002,
-    NODE_CHILD_TYPE_WHERE = 1003;
+    NODE_CHILD_TYPE_WHERE = 1003,
+    NODE_CHILD_TYPE_VALUES = 1004,
+    NODE_CHILD_TYPE_INTO = 1005;
 
 class Node {
     constructor(type, value) {
@@ -59,6 +62,12 @@ function printSyntaxTree(node, indent = 0) {
     }
     if(node.type == NODE_CHILD_TYPE_WHERE) {
         console.log("NODE_WHERE");
+    }
+    if(node.type == NODE_CHILD_TYPE_VALUES) {
+        console.log("NODE_VALUES");
+    }
+    if(node.type == NODE_CHILD_TYPE_INTO) {
+        console.log("NODE_INTO");
     }
     if(node.value) {
         console.log(indentSpace + node.value)
@@ -208,6 +217,9 @@ class QueryParser {
             }
             queryTokens.wheres.push(verse);
         }
+        if(type == TYPE_VALUES) {
+            queryTokens.values.push(verse);
+        }
         console.log(verse);
     }
 
@@ -232,19 +244,29 @@ class QueryParser {
                 break;
         }
 
-        {
+        if(root.type == NODE_TYPE_SELECT || root.type == NODE_TYPE_INSERT){
             var columnNode = new Node(NODE_CHILD_TYPE_COLUMN);
 
-            for(let i = 0;i < queryTokens.columns.length;i++) {
+            if(root.type == NODE_TYPE_INSERT) {
+                var into = queryTokens.columns[0].toLowerCase();
+                if(into != "into") {
+                    throw Error('INSERT "INTO" error');
+                }
+
+                let node = new Node(NODE_CHILD_TYPE_INTO, queryTokens.columns[1]);
+                root.addChild(node);
+            }
+
+            for(let i = 2;i < queryTokens.columns.length;i++) {
                 let column = queryTokens.columns[i];
-                if(column != ",") {
+                if(column != "," && column != "("  && column != ")") {
                     let node = new Node(NODE_VALUE, column);
                     columnNode.addChild(node);
                 }
             }
             root.addChild(columnNode);
         }
-        {
+        if(root.type == NODE_TYPE_SELECT || root.type == NODE_TYPE_UPDATE ||  root.type == NODE_TYPE_DELETE){
             var fromNode = new Node(NODE_CHILD_TYPE_FROM);
 
             for(let i = 0;i < queryTokens.froms.length;i++) {
@@ -256,7 +278,7 @@ class QueryParser {
             }
             root.addChild(fromNode);
         }
-        {
+        if(root.type == NODE_TYPE_SELECT || root.type == NODE_TYPE_UPDATE ||  root.type == NODE_TYPE_DELETE){
             var whereNode = new Node(NODE_CHILD_TYPE_WHERE);
 
             var length = queryTokens.wheres.length;
@@ -285,6 +307,18 @@ class QueryParser {
             }
             root.addChild(whereNode);
         }
+        if(root.type == NODE_TYPE_INSERT){
+            var valuesNode = new Node(NODE_CHILD_TYPE_VALUES);
+
+            for(let i = 0;i < queryTokens.values.length;i++) {
+                let column = queryTokens.values[i];
+                if(column != "," && column != "("  && column != ")") {
+                    let node = new Node(NODE_VALUE, column);
+                    valuesNode.addChild(node);
+                }
+            }
+            root.addChild(valuesNode);
+        }
         return root;
     }
 
@@ -293,7 +327,9 @@ class QueryParser {
         var queryTokens = {
             columns: [],
             froms: [],
-            wheres: []
+            wheres: [],
+            values: [],
+            into: null
         };
 
         var verse = "";
@@ -318,7 +354,7 @@ class QueryParser {
                 quote = char;
             } else if(char === ' ' || char === '\t' || char === '\r' || char === '\n') {
                 var verse2 = verse.toLowerCase();
-                if(verse2 == "select") {
+                if(verse2 == "select" || verse2 == "insert") {
                     type = TYPE_COLUMN;
                     queryType = verse2;
                     queryTypeDecided = true;
@@ -326,6 +362,8 @@ class QueryParser {
                     type = TYPE_FROM;
                 } else if(verse2 == "where") {
                     type = TYPE_WHERE;
+                } else if(verse2 == "values") {
+                    type = TYPE_VALUES;
                 } else {
                     if(verse != "") {
                         QueryParser.exeVerse(type, queryTokens, verse);
@@ -350,6 +388,7 @@ class QueryParser {
         console.log("queryTokens.columns=", queryTokens.columns);
         console.log("queryTokens.froms=", queryTokens.froms);
         console.log("queryTokens.wheres=", queryTokens.wheres);
+        console.log("queryTokens.values=", queryTokens.values);
 
         var syntaxTree = QueryParser.makeSyntaxTree(queryType, queryTokens);
         console.log("makeSyntaxTree", syntaxTree);
@@ -358,7 +397,7 @@ class QueryParser {
         printSyntaxTree(syntaxTree);
         console.groupEnd();
 
-        var selectors = [], froms = [], wheres = [];
+        var selectors = [], froms = [], wheres = [], values = [];
         for(let i = 0;i < syntaxTree.children.length;i++) {
             let node = syntaxTree.children[i];
             if(node.type == NODE_CHILD_TYPE_COLUMN) {
@@ -376,10 +415,24 @@ class QueryParser {
                     wheres.push(child.value);
                 }
             }
+            if(node.type == NODE_CHILD_TYPE_VALUES) {
+                for(let child of node.children) {
+                    values.push(child.value);
+                }
+            }
         }
-        let dataSource = fromToDataSource(this._global, froms);
-        console.log(dataSource);
-        dataSource = filterByWhere(dataSource, wheres, selectors);
-        return dataSource;
+        var parseResult = {type: queryType};
+        if(queryType == "select" || queryType == "update" || queryType == "delete") {
+            let dataSource = fromToDataSource(this._global, froms);
+            console.log(dataSource);
+            dataSource = filterByWhere(dataSource, wheres, selectors);
+            parseResult["dataSource"] = dataSource;
+            return parseResult;   
+        }
+        if(queryType == "insert") {
+            parseResult["selectors"] = selectors;
+            parseResult["values"] = values;
+            return parseResult;   
+        }
     }
 }

@@ -42,8 +42,9 @@
     function convert() {
         var sql = document.getElementById('sql').value;
         var parser = new QueryParser(window);
-        var dataSource = parser.convert(sql);
-        if(dataSource.length > 0) {
+        var parseResult = parser.convert(sql);
+        if(parseResult.type == "select" && parseResult.dataSource.length > 0) {
+            var dataSource = parseResult.dataSource;
             var names = Object.keys(dataSource[0]);
 
             var table = "<table>";
@@ -61,11 +62,29 @@
                 table += "</tr>";
             }
 
+            table += "</table>";
+            document.getElementById('result').innerHTML = table;
+        }
+        if(parseResult.type == "insert") {
+            var names = parseResult.selectors, nameLength = names.length;
+
+            var table = "<table>";
+            table += "<tr>";
+            for(let name of names) {
+                table += "<th>" + name + "</th>";
+            }
+            table += "</tr>";
+
+            table += "<tr>";
+            for(let j = 0;j < nameLength;j++) {
+                table += "<td>" + parseResult.values[j] + "</td>";
+            }
+            table += "</tr>";
 
             table += "</table>";
             document.getElementById('result').innerHTML = table;
         }
-        console.log(dataSource);
+        console.log(parseResult);
     }
     window.onload = function() {
         convert();
@@ -75,10 +94,11 @@
 <body>
 <input type="button" value="Convert" onclick="convert();" />
 <div>
-<textarea id="sql" style="width: 500px;height:300px;">SELECT id,name,div_id,div_name FROM `ad_repetitions` INNER JOIN `division_table` ON division = div_id  WHERE division = 100 AND age > 20 AND is_expired &lt;&gt; 1</textarea>
+<!-- <textarea id="sql" style="width: 500px;height:300px;">SELECT id,name,div_id,div_name FROM `ad_repetitions` INNER JOIN `division_table` ON division = div_id  WHERE division = 100 AND age > 20 AND is_expired &lt;&gt; 1</textarea> -->
+<textarea id="sql" style="width: 500px;height:300px;">INSERT INTO ad_repetitions(id , name, age) VALUES (105,'Goro', 25)</textarea>
 </div>
 
 <div id="result"></div>
-
+<div><a href="">CSVでダウンロード</a></div>
 </body>
 </html>
