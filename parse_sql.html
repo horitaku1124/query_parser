@@ -66,6 +66,7 @@
             document.getElementById('result').innerHTML = table;
         }
         if(parseResult.type == "insert") {
+            var csvData = "";
             var names = parseResult.selectors, nameLength = names.length;
 
             var table = "<table>";
@@ -74,15 +75,23 @@
                 table += "<th>" + name + "</th>";
             }
             table += "</tr>";
+            csvData = names.join(",") + "\r\n";
 
             table += "<tr>";
             for(let j = 0;j < nameLength;j++) {
                 table += "<td>" + parseResult.values[j] + "</td>";
             }
+            csvData += parseResult.values.join(",") + "\r\n";
             table += "</tr>";
 
             table += "</table>";
             document.getElementById('result').innerHTML = table;
+
+            const blob1 = new Blob([csvData], { type: "text/plain" });
+            var url = window.URL ? window.URL.createObjectURL(blob1) : window.webkitURL.createObjectURL(blob1);
+
+            console.log(blob1, url);
+            document.getElementById('download_link').setAttribute("href", url);
         }
         console.log(parseResult);
     }
@@ -99,6 +108,6 @@
 </div>
 
 <div id="result"></div>
-<div><a href="">CSVでダウンロード</a></div>
+<div><a id="download_link"  href="">CSVでダウンロード</a></div>
 </body>
 </html>
