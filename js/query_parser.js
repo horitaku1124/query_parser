@@ -397,7 +397,7 @@ class QueryParser {
         printSyntaxTree(syntaxTree);
         console.groupEnd();
 
-        var selectors = [], froms = [], wheres = [], values = [];
+        var selectors = [], froms = [], wheres = [], values = [], into = null;
         for(let i = 0;i < syntaxTree.children.length;i++) {
             let node = syntaxTree.children[i];
             if(node.type == NODE_CHILD_TYPE_COLUMN) {
@@ -420,6 +420,9 @@ class QueryParser {
                     values.push(child.value);
                 }
             }
+            if(node.type == NODE_CHILD_TYPE_INTO) {
+                into = node.value;
+            }
         }
         var parseResult = {type: queryType};
         if(queryType == "select" || queryType == "update" || queryType == "delete") {
@@ -432,7 +435,8 @@ class QueryParser {
         if(queryType == "insert") {
             parseResult["selectors"] = selectors;
             parseResult["values"] = values;
-            return parseResult;   
+            parseResult["into"] = into;
+            return parseResult;
         }
     }
 }
