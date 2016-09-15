@@ -44,7 +44,6 @@
         var sql = document.getElementById('sql').value;
         var parser = new QueryParser(window);
         try {
-
             var parseResult = parser.convert(sql);
             if(parseResult.type == "select" && parseResult.dataSource.length > 0) {
                 var dataSource = parseResult.dataSource;
@@ -69,8 +68,7 @@
                 document.getElementById('result').innerHTML = table;
             }
             if(parseResult.type == "insert") {
-                var csvData = "";
-                var names = parseResult.selectors, nameLength = names.length;
+                var csvData, names = parseResult.selectors, nameLength = names.length;
 
                 var table = "<table>";
                 table += "<tr>";
@@ -125,7 +123,7 @@
 <input type="button" value="Convert" onclick="convert();" />
 <div>
 <!-- <textarea id="sql" style="width: 500px;height:300px;">SELECT id,name,div_id,div_name FROM `ad_repetitions` INNER JOIN `division_table` ON division = div_id  WHERE division = 100 AND age > 20 AND is_expired &lt;&gt; 1</textarea> -->
-<textarea id="sql" style="width: 500px;height:300px;">INSERT INTO ad_repetitions(id , name, age) VALUES (105,'Goro', 25)</textarea>
+<textarea id="sql" style="width: 500px;height:300px;">INSERT INTO ad_repetitions(id , name, age, birthday) VALUES (105,'Goro', 25, today())</textarea>
 </div>
 
 <div id="result"></div>

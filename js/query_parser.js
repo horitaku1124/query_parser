@@ -258,6 +258,16 @@ class QueryParser {
 
             for(let i = 0;i < queryTokens.values.length;i++) {
                 let column = queryTokens.values[i];
+                if(/[a-zA-Z0-9\_]+/.test(column)) {
+                    let next = queryTokens.values[i + 1] != undefined ? queryTokens.values[i + 1] : null;
+                    let next2 = queryTokens.values[i + 2] != undefined ? queryTokens.values[i + 2] : null;
+                    if(next == "(" && next2 == ")") {
+                        let node = new Node(NODE_VALUE, column + next + next2);
+                        valuesNode.addChild(node);
+                        i += 2;
+                        continue;
+                    }
+                }
                 if(column != "," && column != "("  && column != ")") {
                     let node = new Node(NODE_VALUE, column);
                     valuesNode.addChild(node);
