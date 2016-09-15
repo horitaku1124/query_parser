@@ -43,60 +43,66 @@
     function convert() {
         var sql = document.getElementById('sql').value;
         var parser = new QueryParser(window);
-        var parseResult = parser.convert(sql);
-        if(parseResult.type == "select" && parseResult.dataSource.length > 0) {
-            var dataSource = parseResult.dataSource;
-            var names = Object.keys(dataSource[0]);
+        try {
 
-            var table = "<table>";
-            table += "<tr>";
-            for(let name of names) {
-                table += "<th>" + name + "</th>";
-            }
-            table += "</tr>";
+            var parseResult = parser.convert(sql);
+            if(parseResult.type == "select" && parseResult.dataSource.length > 0) {
+                var dataSource = parseResult.dataSource;
+                var names = Object.keys(dataSource[0]);
 
-            for(let i = 0;i < dataSource.length;i++) {
+                var table = "<table>";
                 table += "<tr>";
                 for(let name of names) {
-                    table += "<td>" + dataSource[i][name] + "</td>";
+                    table += "<th>" + name + "</th>";
                 }
                 table += "</tr>";
-            }
 
-            table += "</table>";
-            document.getElementById('result').innerHTML = table;
+                for(let i = 0;i < dataSource.length;i++) {
+                    table += "<tr>";
+                    for(let name of names) {
+                        table += "<td>" + dataSource[i][name] + "</td>";
+                    }
+                    table += "</tr>";
+                }
+
+                table += "</table>";
+                document.getElementById('result').innerHTML = table;
+            }
+            if(parseResult.type == "insert") {
+                var csvData = "";
+                var names = parseResult.selectors, nameLength = names.length;
+
+                var table = "<table>";
+                table += "<tr>";
+                for(let name of names) {
+                    table += "<th>" + name + "</th>";
+                }
+                table += "</tr>";
+                csvData = names.join(",") + "\r\n";
+
+                table += "<tr>";
+                for(let j = 0;j < nameLength;j++) {
+                    table += "<td>" + parseResult.values[j] + "</td>";
+                }
+                csvData += parseResult.values.join(",") + "\r\n";
+                table += "</tr>";
+
+                table += "</table>";
+                document.getElementById('result').innerHTML = table;
+
+                const blob1 = new Blob([csvData], { type: "text/csv" });
+                var url = window.URL ? window.URL.createObjectURL(blob1) : window.webkitURL.createObjectURL(blob1);
+
+                console.log(blob1, url);
+                var download_link = document.getElementById('download_link');
+                download_link.setAttribute("href", url);
+                download_link.setAttribute("download", parseResult["into"] + ".csv");
+            }
+            console.log(parseResult);
+        } catch (e) {
+            document.getElementById('result').innerHTML = e.message;
+            console.log(e);
         }
-        if(parseResult.type == "insert") {
-            var csvData = "";
-            var names = parseResult.selectors, nameLength = names.length;
-
-            var table = "<table>";
-            table += "<tr>";
-            for(let name of names) {
-                table += "<th>" + name + "</th>";
-            }
-            table += "</tr>";
-            csvData = names.join(",") + "\r\n";
-
-            table += "<tr>";
-            for(let j = 0;j < nameLength;j++) {
-                table += "<td>" + parseResult.values[j] + "</td>";
-            }
-            csvData += parseResult.values.join(",") + "\r\n";
-            table += "</tr>";
-
-            table += "</table>";
-            document.getElementById('result').innerHTML = table;
-
-            const blob1 = new Blob([csvData], { type: "text/csv" });
-            var url = window.URL ? window.URL.createObjectURL(blob1) : window.webkitURL.createObjectURL(blob1);
-
-            console.log(blob1, url);
-            var download_link = document.getElementById('download_link');
-            download_link.setAttribute("href", url);
-            download_link.setAttribute("download", parseResult["into"] + ".csv");
-        }
-        console.log(parseResult);
     }
     window.onload = function() {
         convert();

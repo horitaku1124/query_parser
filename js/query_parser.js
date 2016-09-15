@@ -264,6 +264,9 @@ class QueryParser {
                 }
             }
             root.addChild(valuesNode);
+            if(root.children[1].children.length != root.children[2].children.length) {
+                throw new Error("length error");
+            }
         }
         return root;
     }
