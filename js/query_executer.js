@@ -29,32 +29,32 @@ function printSyntaxTree(node, indent = 0) {
 function fromToDataSource(dataScope, froms) {
     console.log("froms", froms);
 
-    var baseTable = [];
+    let baseTable = [];
     if(froms.length > 0) {
         baseTable = dataScope[froms[0]];
     }
     console.log("baseTable", baseTable);
 
     for(let i = 1;i < froms.length;i++) {
-        var next = froms[i];
-        var next2 = froms[i + 1];
+        let next = froms[i];
+        let next2 = froms[i + 1];
         if(next == "JOIN") {
             next = "LEFT";
             next2 = "JOIN";
         }
         i += 2;
         if(next == "INNER" && next2 == "JOIN") {
-            var newBaseTable = [];
-            var joinTable = dataScope[froms[i]];
-            var joinOn = froms[i + 1] == "ON";
-            var joinLeft = joinOn ? froms[i + 2] : null,
+            let newBaseTable = [];
+            let joinTable = dataScope[froms[i]];
+            let joinOn = froms[i + 1] == "ON";
+            let joinLeft = joinOn ? froms[i + 2] : null,
                 joinExpression = joinOn ? froms[i + 3] : null,
                 joinRight = joinOn ? froms[i + 4] : null;
             for(let j = 0;j < baseTable.length;j++) {
                 for(let k = 0;k < joinTable.length;k++) {
                     if (joinOn) {
-                        var left = baseTable[j][joinLeft], right = joinTable[k][joinRight];
-                        var result = false;
+                        let left = baseTable[j][joinLeft], right = joinTable[k][joinRight];
+                        let result = false;
                         switch(joinExpression) {
                             case "=":
                                 result = left == right;
@@ -62,10 +62,10 @@ function fromToDataSource(dataScope, froms) {
                         }
                         if(!result) continue;
                     }
-                    var newRow = {};
+                    let newRow = {};
                     Object.assign(newRow, baseTable[j]);
                     Object.assign(newRow, joinTable[k]);
-                    var leftValue =
+                    let leftValue =
                         newBaseTable.push(newRow);
                 }
             }
@@ -78,15 +78,18 @@ function fromToDataSource(dataScope, froms) {
 }
 
 function filterByWhere(dataSource, wheres, selectors) {
-    var resultSource = [];
+    let newRow;
+    let result;
+    let expression;
+    let resultSource = [];
     for(let i = 0;i < dataSource.length;i++) {
-        var row = dataSource[i];
-        var resultRow = [];
+        let row = dataSource[i];
+        let resultRow = [];
         for(let j = 0;j < wheres.length;j += 2) {
-            var subject = row[wheres[j][0]];
-            var expression = wheres[j][1];
-            var object = wheres[j][2];
-            var result = false;
+            let subject = row[wheres[j][0]];
+            expression = wheres[j][1];
+            let object = wheres[j][2];
+            result = false;
             switch (expression) {
                 case "<>":
                     result = subject != object;
@@ -108,11 +111,11 @@ function filterByWhere(dataSource, wheres, selectors) {
             }
         }
         while(resultRow.length > 2) {
-            var newRow = [];
-            var left = resultRow[0], right = resultRow[2];
-            var expression = resultRow[1];
+            newRow = [];
+            let left = resultRow[0], right = resultRow[2];
+            expression = resultRow[1];
 
-            var result = false;
+            result = false;
             switch (expression) {
                 case "AND":
                     result = left && right;
@@ -129,10 +132,10 @@ function filterByWhere(dataSource, wheres, selectors) {
         }
         if(resultRow.length == 1) {
             if(resultRow[0]) {
-                var newRow = {};
-                for(var key of selectors) {
+                newRow = {};
+                for(let key of selectors) {
                     if(key == "*") {
-                        for(var key2 in row) {
+                        for(let key2 in row) {
                             newRow[key2] = row[key2];
                         }
                     } else {

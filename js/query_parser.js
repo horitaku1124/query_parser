@@ -25,7 +25,7 @@ class QueryParser {
 
     static makeSyntaxTree(queryType, queryTokens)
     {
-        var root = new Node();
+        let root = new Node();
         switch (queryType) {
             case "select":
                 root.type = NODE_TYPE_SELECT;
@@ -45,10 +45,10 @@ class QueryParser {
         }
 
         if(root.type == NODE_TYPE_SELECT || root.type == NODE_TYPE_INSERT){
-            var columnNode = new Node(NODE_CHILD_TYPE_COLUMN);
+            let columnNode = new Node(NODE_CHILD_TYPE_COLUMN);
 
             if(root.type == NODE_TYPE_INSERT) {
-                var into = queryTokens.columns[0].toLowerCase();
+                let into = queryTokens.columns[0].toLowerCase();
                 if(into != "into") {
                     throw Error('INSERT "INTO" error');
                 }
@@ -67,7 +67,7 @@ class QueryParser {
             root.addChild(columnNode);
         }
         if(root.type == NODE_TYPE_SELECT || root.type == NODE_TYPE_UPDATE ||  root.type == NODE_TYPE_DELETE){
-            var fromNode = new Node(NODE_CHILD_TYPE_FROM);
+            let fromNode = new Node(NODE_CHILD_TYPE_FROM);
 
             for(let i = 0;i < queryTokens.froms.length;i++) {
                 let column = queryTokens.froms[i];
@@ -79,9 +79,9 @@ class QueryParser {
             root.addChild(fromNode);
         }
         if(root.type == NODE_TYPE_SELECT || root.type == NODE_TYPE_UPDATE ||  root.type == NODE_TYPE_DELETE){
-            var whereNode = new Node(NODE_CHILD_TYPE_WHERE);
+            let whereNode = new Node(NODE_CHILD_TYPE_WHERE);
 
-            var length = queryTokens.wheres.length;
+            let length = queryTokens.wheres.length;
             for(let i = 0;i < length;i++) {
                 let column = queryTokens.wheres[i];
 
@@ -93,7 +93,7 @@ class QueryParser {
                     whereNode.addChild(node);
                     continue;
                 }
-                var formulas = [column];
+                let formulas = [column];
                 for(let j = 0;j < 2;j++) {
                     if((i + 2 <= length) &&  queryTokens.wheres[i + 1] != "and") {
                         formulas.push(queryTokens.wheres[i + 1]);
@@ -108,7 +108,7 @@ class QueryParser {
             root.addChild(whereNode);
         }
         if(root.type == NODE_TYPE_INSERT){
-            var valuesNode = new Node(NODE_CHILD_TYPE_VALUES);
+            let valuesNode = new Node(NODE_CHILD_TYPE_VALUES);
 
             for(let i = 0;i < queryTokens.values.length;i++) {
                 let column = queryTokens.values[i];
@@ -137,7 +137,7 @@ class QueryParser {
 
     convert(sql)
     {
-        var queryTokens = {
+        let queryTokens = {
             columns: [],
             froms: [],
             wheres: [],
@@ -145,9 +145,9 @@ class QueryParser {
             into: null
         };
 
-        var verse = "", quote = null, queryType;
-        var queryTypeDecided = false;
-        var type = TYPE_NONE;
+        let verse = "", quote = null, queryType;
+        let queryTypeDecided = false;
+        let type = TYPE_NONE;
         console.group();
         for(let i = 0;i < sql.length;i++) {
             const char = sql[i];
@@ -164,7 +164,7 @@ class QueryParser {
             if(char === '\'' || char === '"' || char === '`') {
                 quote = char;
             } else if(char === ' ' || char === '\t' || char === '\r' || char === '\n') {
-                var verse2 = verse.toLowerCase();
+                let verse2 = verse.toLowerCase();
                 if(verse2 == "select" || verse2 == "insert") {
                     type = TYPE_COLUMN;
                     queryType = verse2;
@@ -201,14 +201,14 @@ class QueryParser {
         console.log("queryTokens.wheres=", queryTokens.wheres);
         console.log("queryTokens.values=", queryTokens.values);
 
-        var syntaxTree = QueryParser.makeSyntaxTree(queryType, queryTokens);
+        let syntaxTree = QueryParser.makeSyntaxTree(queryType, queryTokens);
         console.log("makeSyntaxTree", syntaxTree);
 
         console.group();
         printSyntaxTree(syntaxTree);
         console.groupEnd();
 
-        var selectors = [], froms = [], wheres = [], values = [], into = null;
+        let selectors = [], froms = [], wheres = [], values = [], into = null;
         for(let i = 0;i < syntaxTree.children.length;i++) {
             let node = syntaxTree.children[i];
             if(node.type == NODE_CHILD_TYPE_COLUMN) {
@@ -235,7 +235,7 @@ class QueryParser {
                 into = node.value;
             }
         }
-        var parseResult = {type: queryType};
+        let parseResult = {type: queryType};
         if(queryType == "select" || queryType == "update" || queryType == "delete") {
             let dataSource = fromToDataSource(this._global, froms);
             console.log(dataSource);
