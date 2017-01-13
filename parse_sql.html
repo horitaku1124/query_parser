@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
+<script src="js/query_executer.js"></script>
 <script src="js/query_parser.js"></script>
 <script src="js/query_node.js"></script>
 <meta charset="UTF-8">
 <title>SQL</title>
 <script type="text/javascript">
-    var ad_repetitions = [
+    var employees = [
         {
             id: 1,
             name: "taro",
@@ -122,8 +123,8 @@
 <body>
 <input type="button" value="Convert" onclick="convert();" />
 <div>
-<!-- <textarea id="sql" style="width: 500px;height:300px;">SELECT id,name,div_id,div_name FROM `ad_repetitions` INNER JOIN `division_table` ON division = div_id  WHERE division = 100 AND age > 20 AND is_expired &lt;&gt; 1</textarea> -->
-<textarea id="sql" style="width: 500px;height:300px;">INSERT INTO ad_repetitions(id , name, age, birthday) VALUES (105,'Goro', 25, today())</textarea>
+<!-- <textarea id="sql" style="width: 500px;height:300px;">SELECT id,name,div_id,div_name FROM `employees` INNER JOIN `division_table` ON division = div_id  WHERE division = 100 AND age > 20 AND is_expired &lt;&gt; 1</textarea> -->
+<textarea id="sql" style="width: 500px;height:300px;">INSERT INTO employees(id , name, age, birthday) VALUES (105,'Goro', 25, today())</textarea>
 </div>
 
 <div id="result"></div>
