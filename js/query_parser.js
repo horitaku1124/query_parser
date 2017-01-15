@@ -122,7 +122,12 @@ class QueryParser {
                         continue;
                     }
                 }
+                // Value type
                 if(column != "," && column != "("  && column != ")") {
+                    console.log("value", column);
+                    if(column.indexOf("\\") >= 0) {
+                        column = escapeByCharacter(column);
+                    }
                     let node = new Node(NODE_VALUE, column);
                     valuesNode.addChild(node);
                 }

@@ -124,7 +124,7 @@
 <input type="button" value="Convert" onclick="convert();" />
 <div>
 <!-- <textarea id="sql" style="width: 500px;height:300px;">SELECT id,name,div_id,div_name FROM `employees` INNER JOIN `division_table` ON division = div_id  WHERE division = 100 AND age > 20 AND is_expired &lt;&gt; 1</textarea> -->
-<textarea id="sql" style="width: 500px;height:300px;">INSERT INTO employees(id , name, age, birthday) VALUES (105,'Goro', 25, today())</textarea>
+<textarea id="sql" style="width: 500px;height:300px;">INSERT INTO employees(id , name, age, birthday, remark) VALUES (105,'Goro', 25, today(), 'first\nsecond\nthird')</textarea>
 </div>
 
 <div id="result"></div>

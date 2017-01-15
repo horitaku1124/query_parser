@@ -148,3 +148,25 @@ function filterByWhere(dataSource, wheres, selectors) {
     }
     return resultSource;
 }
+
+function escapeByCharacter(chars) {
+    let index = 0;
+    while(true) {
+        index = chars.indexOf("\\", index);
+        if(index < 0) {
+            break;
+        }
+        let c = chars.charAt(index + 1);
+        let replaceTo = "\\";
+        switch (c) {
+            case "n":
+                replaceTo = "\n";
+                break;
+            default:
+                break;
+        }
+        chars = chars.substring(0, index) + replaceTo + chars.substring(index + 2);
+        index--;
+    }
+    return chars;
+}
