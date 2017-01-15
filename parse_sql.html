@@ -7,7 +7,7 @@
 <meta charset="UTF-8">
 <title>SQL</title>
 <script type="text/javascript">
-    var employees = [
+    const employees = [
         {
             id: 1,
             name: "taro",
@@ -37,20 +37,22 @@
             is_expired: 0
         }
     ];
-    var division_table = [
+    const division_table = [
         {div_id: 100, div_name: "Development"},
         {div_id: 200, div_name: "Operation"},
     ];
     function convert() {
-        var sql = document.getElementById('sql').value;
-        var parser = new QueryParser(window);
+        let table;
+        let names;
+        let sql = document.getElementById('sql').value;
+        let parser = new QueryParser(window);
         try {
-            var parseResult = parser.convert(sql);
+            let parseResult = parser.convert(sql);
             if(parseResult.type == "select" && parseResult.dataSource.length > 0) {
-                var dataSource = parseResult.dataSource;
-                var names = Object.keys(dataSource[0]);
+                let dataSource = parseResult.dataSource;
+                names = Object.keys(dataSource[0]);
 
-                var table = "<table>";
+                table = "<table>";
                 table += "<tr>";
                 for(let name of names) {
                     table += "<th>" + name + "</th>";
@@ -69,9 +71,11 @@
                 document.getElementById('result').innerHTML = table;
             }
             if(parseResult.type == "insert") {
-                var csvData, names = parseResult.selectors, nameLength = names.length;
+                let csvData;
+                names = parseResult.selectors;
+                let nameLength = names.length;
 
-                var table = "<table>";
+                table = "<table>";
                 table += "<tr>";
                 for(let name of names) {
                     table += "<th>" + name + "</th>";
@@ -90,10 +94,10 @@
                 document.getElementById('result').innerHTML = table;
 
                 const blob1 = new Blob([csvData], { type: "text/csv" });
-                var url = window.URL ? window.URL.createObjectURL(blob1) : window.webkitURL.createObjectURL(blob1);
+                let url = window.URL ? window.URL.createObjectURL(blob1) : window.webkitURL.createObjectURL(blob1);
 
                 console.log(blob1, url);
-                var download_link = document.getElementById('download_link');
+                let download_link = document.getElementById('download_link');
                 download_link.setAttribute("href", url);
                 download_link.setAttribute("download", parseResult["into"] + ".csv");
             }

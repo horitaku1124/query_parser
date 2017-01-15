@@ -78,10 +78,7 @@ function fromToDataSource(dataScope, froms) {
 }
 
 function filterByWhere(dataSource, wheres, selectors) {
-    let newRow;
-    let result;
-    let expression;
-    let resultSource = [];
+    let newRow, result, expression, resultSource = [];
     for(let i = 0;i < dataSource.length;i++) {
         let row = dataSource[i];
         let resultRow = [];
