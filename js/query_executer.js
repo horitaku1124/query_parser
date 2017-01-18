@@ -156,6 +156,9 @@ function escapeByCharacter(chars) {
         let c = chars.charAt(index + 1);
         let replaceTo = "\\";
         switch (c) {
+            case "'":
+                replaceTo = "'";
+                break;
             case "n":
                 replaceTo = "\n";
                 break;

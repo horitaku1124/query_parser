@@ -7,7 +7,7 @@
 <meta charset="UTF-8">
 <title>SQL</title>
 <script type="text/javascript">
-    const CSV_BOM = new Uint8Array([0xEF, 0xBB, 0xBF]);
+    const UTF8_BOM = new Uint8Array([0xEF, 0xBB, 0xBF]);
     const employees = [
         {
             id: 1,
@@ -88,17 +88,19 @@
                 table += "</tr>";
                 csvData = names.join(",") + "\r\n";
 
-                table += "<tr>";
-                for(let j = 0;j < nameLength;j++) {
-                    table += "<td>" + parseResult.values[j] + "</td>";
+                for(let values of parseResult.records) {
+                    table += "<tr>";
+                    for(let j = 0;j < nameLength;j++) {
+                        table += "<td>" + values[j] + "</td>";
+                    }
+                    csvData += values.map(str => str.indexOf("\n") >= 0 ? "\"" + str + "\"" : str).join(",") + "\r\n";
+                    table += "</tr>";
                 }
-                csvData += parseResult.values.map(str => str.indexOf("\n") >= 0 ? "\"" + str + "\"" : str).join(",") + "\r\n";
-                table += "</tr>";
 
                 table += "</table>";
                 document.getElementById('result').innerHTML = table;
 
-                const blob1 = new Blob([CSV_BOM, csvData], { type: "text/csv" });
+                const blob1 = new Blob([UTF8_BOM, csvData], { type: "text/csv" });
                 let url = window.URL ? window.URL.createObjectURL(blob1) : window.webkitURL.createObjectURL(blob1);
 
                 console.log(blob1, url);
@@ -133,7 +135,7 @@
 <input type="button" value="Convert" onclick="convert();" />
 <div>
 <!-- <textarea id="sql" style="width: 500px;height:300px;">SELECT id,name,div_id,div_name FROM `employees` INNER JOIN `division_table` ON division = div_id  WHERE division = 100 AND age > 20 AND is_expired &lt;&gt; 1</textarea> -->
-<textarea id="sql" style="width: 500px;height:300px;">INSERT INTO employees(id , name, age, birthday, remark) VALUES (105,'Goro', 25, today(), 'first\nsecond\nthird')</textarea>
+<textarea id="sql" style="width: 500px;height:300px;">INSERT INTO employees(id , name, age, birthday, remark) VALUES (105,'Goro', 28, '2017-01-01', 'first\nsecond\nthird'), (191,'Goro2', 26, today(), 'あいう')</textarea>
 </div>
 
 <div id="result"></div>

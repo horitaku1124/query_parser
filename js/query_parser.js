@@ -108,10 +108,18 @@ class QueryParser {
             root.addChild(whereNode);
         }
         if(root.type == NODE_TYPE_INSERT){
-            let valuesNode = new Node(NODE_CHILD_TYPE_VALUES);
+            let valuesNode, nestDepth = 0;
 
             for(let i = 0;i < queryTokens.values.length;i++) {
                 let column = queryTokens.values[i];
+                if(column == '(') {
+                    valuesNode = new Node(NODE_CHILD_TYPE_VALUES);
+                    nestDepth++;
+                }
+                if(column == ')') {
+                    root.addChild(valuesNode);
+                    nestDepth--;
+                }
                 if(/[a-zA-Z0-9\_]+/.test(column)) {
                     let next = queryTokens.values[i + 1] != undefined ? queryTokens.values[i + 1] : null;
                     let next2 = queryTokens.values[i + 2] != undefined ? queryTokens.values[i + 2] : null;
@@ -132,9 +140,11 @@ class QueryParser {
                     valuesNode.addChild(node);
                 }
             }
-            root.addChild(valuesNode);
-            if(root.children[1].children.length != root.children[2].children.length) {
-                throw new Error("length error");
+            let nameCount = root.children[1].children.length;
+            for(let i = 2;i < root.children.length;i++) {
+                if(nameCount != root.children[i].children.length) {
+                    throw new Error("length error");
+                }
             }
         }
         return root;
@@ -213,7 +223,7 @@ class QueryParser {
         printSyntaxTree(syntaxTree);
         console.groupEnd();
 
-        let selectors = [], froms = [], wheres = [], values = [], into = null;
+        let selectors = [], froms = [], wheres = [], records = [], into = null;
         for(let i = 0;i < syntaxTree.children.length;i++) {
             let node = syntaxTree.children[i];
             if(node.type == NODE_CHILD_TYPE_COLUMN) {
@@ -232,9 +242,11 @@ class QueryParser {
                 }
             }
             if(node.type == NODE_CHILD_TYPE_VALUES) {
+                let values = [];
                 for(let child of node.children) {
                     values.push(child.value);
                 }
+                records.push(values);
             }
             if(node.type == NODE_CHILD_TYPE_INTO) {
                 into = node.value;
@@ -250,7 +262,7 @@ class QueryParser {
         }
         if(queryType == "insert") {
             parseResult["selectors"] = selectors;
-            parseResult["values"] = values;
+            parseResult["records"] = records;
             parseResult["into"] = into;
             return parseResult;
         }
