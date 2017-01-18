@@ -43,10 +43,14 @@
         {div_id: 200, div_name: "Operation"},
     ];
     function convert() {
+        const globalValues = {
+            'employees': employees,
+            'division_table' : division_table
+        };
         let table;
         let names;
         let sql = document.getElementById('sql').value;
-        let parser = new QueryParser(window);
+        let parser = new QueryParser(globalValues);
         try {
             let parseResult = parser.convert(sql);
             if(parseResult.type == "select" && parseResult.dataSource.length > 0) {
