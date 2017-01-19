@@ -112,6 +112,9 @@ class QueryParser {
 
             for(let i = 0;i < queryTokens.values.length;i++) {
                 let column = queryTokens.values[i];
+                if(column == ";") {
+                    break;
+                }
                 if(column == '(') {
                     valuesNode = new Node(NODE_CHILD_TYPE_VALUES);
                     nestDepth++;
