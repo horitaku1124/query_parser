@@ -4,6 +4,7 @@
 <script src="js/query_executer.js"></script>
 <script src="js/query_parser.js"></script>
 <script src="js/query_node.js"></script>
+<link rel="stylesheet" href="./css/main.css">
 <meta charset="UTF-8">
 <title>SQL</title>
 <script type="text/javascript">
@@ -47,8 +48,7 @@
             'employees': employees,
             'division_table' : division_table
         };
-        let table;
-        let names;
+        let table = "<table>", names;
         let sql = document.getElementById('sql').value;
         let parser = new QueryParser(globalValues);
         try {
@@ -57,7 +57,6 @@
                 let dataSource = parseResult.dataSource;
                 names = Object.keys(dataSource[0]);
 
-                table = "<table>";
                 table += "<tr>";
                 for(let name of names) {
                     table += "<th>" + name + "</th>";
@@ -80,7 +79,6 @@
                 names = parseResult.selectors;
                 let nameLength = names.length;
 
-                table = "<table>";
                 table += "<tr>";
                 for(let name of names) {
                     table += "<th>" + name + "</th>";
@@ -114,22 +112,8 @@
             console.log(e);
         }
     }
-    window.onload = function() {
-        convert();
-    }
+    window.addEventListener("DOMContentLoaded", convert);
 </script>
-    <style>
-        #result table {
-            border-collapse: collapse;
-        }
-        #result table tr th{
-            background-color: #e9f1ff;
-        }
-        #result table tr th, #result table tr td{
-            border: 1px solid #aeaeae;
-            padding: 3px;
-        }
-    </style>
 </head>
 <body>
 <input type="button" value="Convert" onclick="convert();" />
