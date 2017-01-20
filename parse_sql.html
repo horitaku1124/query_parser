@@ -43,6 +43,12 @@
         {div_id: 100, div_name: "Development"},
         {div_id: 200, div_name: "Operation"},
     ];
+    function escapeToCell(str) {
+        if(str.indexOf("\n") >= 0 || str.indexOf(",") >= 0) {
+            return "\"" + str + "\""
+        }
+        return str;
+    }
     function convert() {
         const globalValues = {
             'employees': employees,
@@ -91,7 +97,7 @@
                     for(let j = 0;j < nameLength;j++) {
                         table += "<td>" + values[j] + "</td>";
                     }
-                    csvData += values.map(str => str.indexOf("\n") >= 0 ? "\"" + str + "\"" : str).join(",") + "\r\n";
+                    csvData += values.map(escapeToCell).join(",") + "\r\n";
                     table += "</tr>";
                 }
 
