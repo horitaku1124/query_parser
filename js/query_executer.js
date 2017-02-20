@@ -154,10 +154,13 @@ function escapeByCharacter(chars) {
             break;
         }
         let c = chars.charAt(index + 1);
-        let replaceTo = "\\";
+        let replaceTo = " ";
         switch (c) {
             case "'":
                 replaceTo = "'";
+                break;
+            case "\"":
+                replaceTo = "\"";
                 break;
             case "n":
                 replaceTo = "\n";
