@@ -49,6 +49,9 @@
         }
         return str;
     }
+    function escapeToHtml(str) {
+        return str.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
     function convert() {
         const globalValues = {
             'employees': employees,
@@ -95,7 +98,7 @@
                 for(let values of parseResult.records) {
                     table += "<tr>";
                     for(let j = 0;j < nameLength;j++) {
-                        table += "<td>" + values[j] + "</td>";
+                        table += "<td>" + escapeToHtml(values[j]) + "</td>";
                     }
                     csvData += values.map(escapeToCell).join(",") + "\r\n";
                     table += "</tr>";
