@@ -45,7 +45,7 @@ class Node {
     }
 
     addChild(node) {
-        if(typeof this._children == 'undefined') {
+        if(typeof this._children === 'undefined') {
             this._children = [];
         }
         this._children.push(node);

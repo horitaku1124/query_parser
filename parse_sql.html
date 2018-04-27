@@ -62,7 +62,7 @@
         let parser = new QueryParser(globalValues);
         try {
             let parseResult = parser.convert(sql);
-            if(parseResult.type == "select" && parseResult.dataSource.length > 0) {
+            if(parseResult.type === "select" && parseResult.dataSource.length > 0) {
                 let dataSource = parseResult.dataSource;
                 names = Object.keys(dataSource[0]);
 
@@ -83,7 +83,7 @@
                 table += "</table>";
                 document.getElementById('result').innerHTML = table;
             }
-            if(parseResult.type == "insert") {
+            if(parseResult.type === "insert") {
                 let csvData;
                 names = parseResult.selectors;
                 let nameLength = names.length;
