@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<script src="js/query_executer.js"></script>
+<script src="js/query_parser.js"></script>
+<script src="js/query_node.js"></script>
+<link rel="stylesheet" href="./css/main.css">
+<meta charset="UTF-8">
+<title>SQL</title>
+<script type="text/javascript">
+    const employees = [
+        {
+            id: 1,
+            name: "taro",
+            age: 26,
+            division: 100,
+            is_expired: 0
+        },
+        {
+            id: 2,
+            name: "kotaro",
+            age: 31,
+            division: 100,
+            is_expired: 1
+        },
+        {
+            id: 3,
+            name: "santaro",
+            age: 19,
+            division: 200,
+            is_expired: 0
+        },
+        {
+            id: 4,
+            name: "shiro",
+            age: 20,
+            division: 200,
+            is_expired: 0
+        }
+    ];
+    const division_table = [
+        {div_id: 100, div_name: "Development"},
+        {div_id: 200, div_name: "Operation"},
+    ];
+
+    function convert() {
+        const globalValues = {
+            'employees': employees,
+            'division_table' : division_table
+        };
+        let sql = document.getElementById('sql').value;
+        let parser = new QueryParser(globalValues);
+        try {
+          let [queryType, parseResult] = parser.tokernise(sql);
+            console.log("parseResult", parseResult);
+        } catch (e) {
+            document.getElementById('result').innerHTML = e.message;
+            console.log(e);
+        }
+    }
+</script>
+</head>
+<body>
+<input type="button" value="Convert" onclick="convert();" />
+<div>
+<textarea id="sql" style="width: 500px;height:300px;">SELECT id,name,div_id,div_name FROM `employees` INNER JOIN `division_table` ON division = div_id  WHERE division = 100 AND age > 20 AND is_expired &lt;&gt; 1</textarea>
+</div>
+
+</body>
+</html>

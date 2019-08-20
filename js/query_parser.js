@@ -152,7 +152,7 @@ class QueryParser {
         return root;
     }
 
-    convert(sql)
+    tokernise(sql)
     {
         let queryTokens = {
             columns: [],
@@ -212,6 +212,13 @@ class QueryParser {
             QueryParser.exeVerse(type, queryTokens, verse);
         }
         console.groupEnd();
+        console.log("QueryType=", queryType);
+        return [queryType, queryTokens];
+    }
+
+    convert(sql)
+    {
+        let [queryType, queryTokens] = this.tokernise(sql);
         console.log("QueryType=", queryType);
         console.log("queryTokens.columns=", queryTokens.columns);
         console.log("queryTokens.froms=", queryTokens.froms);
