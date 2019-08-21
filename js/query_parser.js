@@ -20,6 +20,9 @@ class QueryParser {
         if(type === TYPE_VALUES) {
             queryTokens.values.push(verse);
         }
+        if(type === TYPE_ORDERS) {
+            queryTokens.orders.push(verse);
+        }
         console.log(verse);
     }
 
@@ -159,20 +162,22 @@ class QueryParser {
             froms: [],
             wheres: [],
             values: [],
+            orders: [],
             into: null
         };
+        let queryTokensList = [];
 
         let verse = "", quote = null, queryType;
         let queryTypeDecided = false;
         let type = TYPE_NONE;
-        console.group();
         for(let i = 0;i < sql.length;i++) {
             const char = sql[i];
-            if(quote != null) {
+            if(quote !== null) {
                 if(char === quote) {
-                    quote = null;
+                    verse = quote + verse + quote;
                     QueryParser.exeVerse(type, queryTokens, verse);
                     verse = "";
+                    quote = null;
                 } else {
                     verse += char;
                 }
@@ -180,6 +185,12 @@ class QueryParser {
             }
             if(char === '\'' || char === '"' || char === '`') {
                 quote = char;
+            } else if(['+', '-', '/', '*'].includes(char)) {
+                if(verse !== "") {
+                    QueryParser.exeVerse(type, queryTokens, verse);
+                    verse = "";
+                }
+                QueryParser.exeVerse(type, queryTokens, char);
             } else if(char === ' ' || char === '\t' || char === '\r' || char === '\n') {
                 let verse2 = verse.toLowerCase();
                 if(verse2 === "select" || verse2 === "insert") {
@@ -192,6 +203,8 @@ class QueryParser {
                     type = TYPE_WHERE;
                 } else if(verse2 === "values") {
                     type = TYPE_VALUES;
+                }  else if(verse2 === "order") {
+                    type = TYPE_ORDERS;
                 } else {
                     if(verse !== "") {
                         QueryParser.exeVerse(type, queryTokens, verse);
@@ -204,19 +217,86 @@ class QueryParser {
                 }
                 QueryParser.exeVerse(type, queryTokens, char);
                 verse = "";
+            } else if(char === ';') {
+                if(verse !== "") {
+                    QueryParser.exeVerse(type, queryTokens, verse);
+                    verse = "";
+                }
+                queryTokensList.push([queryType, queryTokens]);
+                queryTokens = {
+                    columns: [],
+                    froms: [],
+                    wheres: [],
+                    values: [],
+                    orders: [],
+                    into: null
+                };
             } else {
                 verse += char;
             }
         }
         if(verse !== "") {
-            QueryParser.exeVerse(type, queryTokens, verse);
+            QueryParser.exeVerse(queryType, queryTokens, verse);
         }
-        console.groupEnd();
-        console.log("QueryType=", queryType);
-        return [queryType, queryTokens];
+        if (queryTokens.columns.length > 0 && queryTokens.values.length > 0) {
+            queryTokensList.push([queryType, queryTokens]);
+        }
+        return queryTokensList;
     }
 
     convert(sql)
+    {
+        let queryTokensList = this.tokernise(sql);
+        let parseResultList = [];
+        for (let [queryType, queryTokens] of queryTokensList) {
+            let syntaxTree = QueryParser.makeSyntaxTree(queryType, queryTokens);
+
+            let selectors = [], froms = [], wheres = [], records = [], into = null;
+            for(let i = 0;i < syntaxTree.children.length;i++) {
+                let node = syntaxTree.children[i];
+                if(node.type === NODE_CHILD_TYPE_COLUMN) {
+                    for(let child of node.children) {
+                        selectors.push(child.value);
+                    }
+                }
+                if(node.type === NODE_CHILD_TYPE_FROM) {
+                    for(let child of node.children) {
+                        froms.push(child.value);
+                    }
+                }
+                if(node.type === NODE_CHILD_TYPE_WHERE) {
+                    for(let child of node.children) {
+                        wheres.push(child.value);
+                    }
+                }
+                if(node.type === NODE_CHILD_TYPE_VALUES) {
+                    let values = [];
+                    for(let child of node.children) {
+                        values.push(child.value);
+                    }
+                    records.push(values);
+                }
+                if(node.type === NODE_CHILD_TYPE_INTO) {
+                    into = node.value;
+                }
+            }
+            let parseResult = {type: queryType};
+            if(queryType === "select" || queryType === "update" || queryType === "delete") {
+                // let dataSource = fromToDataSource(this._global, froms);
+                // dataSource = filterByWhere(dataSource, wheres, selectors);
+                // parseResult["dataSource"] = dataSource;
+                parseResultList.push(parseResult);
+            } else if(queryType === "insert") {
+                // parseResult["selectors"] = selectors;
+                // parseResult["records"] = records;
+                // parseResult["into"] = into;
+                parseResultList.push(parseResult);
+            }
+        }
+        return parseResultList;
+    }
+
+    convert2(sql)
     {
         let [queryType, queryTokens] = this.tokernise(sql);
         console.log("QueryType=", queryType);

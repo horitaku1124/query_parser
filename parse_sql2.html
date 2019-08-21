@@ -51,10 +51,12 @@
         let sql = document.getElementById('sql').value;
         let parser = new QueryParser(globalValues);
         try {
-          let [queryType, parseResult] = parser.tokernise(sql);
-            console.log("parseResult", parseResult);
+          let parseResult = parser.tokernise(sql);
+          console.log(parseResult);
+          // let [queryType, parseResult] = parser.tokernise(sql);
+          //   console.log("parseResult", parseResult);
         } catch (e) {
-            document.getElementById('result').innerHTML = e.message;
+            // document.getElementById('result').innerHTML = e.message;
             console.log(e);
         }
     }
