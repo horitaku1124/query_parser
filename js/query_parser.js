@@ -23,7 +23,7 @@ class QueryParser {
         if(type === TYPE_ORDERS) {
             queryTokens.orders.push(verse);
         }
-        console.log(verse);
+        // console.log(verse);
     }
 
     static makeSyntaxTree(queryType, queryTokens)
@@ -155,93 +155,127 @@ class QueryParser {
         return root;
     }
 
+    lexicalAnalysis(sql)
+    {
+      let verseList = [];
+      let verse = "", quote = null;
+      for(let i = 0;i < sql.length;i++) {
+        const char = sql[i];
+        if(quote !== null) {
+          if(char === quote) {
+            verse = quote + verse + quote;
+            verseList.push(verse);
+            verse = "";
+            quote = null;
+          } else {
+            verse += char;
+          }
+          continue;
+        }
+        if(char === '\'' || char === '"' || char === '`') {
+          quote = char;
+        } else if(['+', '-', '/', '*'].includes(char)) {
+          if(verse !== "") {
+            verseList.push(verse);
+            verse = "";
+          }
+
+          verseList.push(char);
+        } else if(char === ' ' || char === '\t' || char === '\r' || char === '\n') {
+          if(verse !== "") {
+            verseList.push(verse);
+          }
+          verse = "";
+        } else if(char === ',' || char === '(' || char === ')') {
+          if(verse !== "") {
+            verseList.push(verse);
+          }
+          verseList.push(char);
+          verse = "";
+        } else if(char === ';') {
+          if(verse !== "") {
+            verseList.push(verse);
+            verse = "";
+          }
+          verseList.push(char);
+        } else {
+          verse += char;
+        }
+      }
+      if(verse !== "") {
+        verseList.push(verse);
+      }
+      return verseList;
+    }
+
     tokernise(sql)
     {
-        let queryTokens = {
+      let queryTokens = {
+        columns: [],
+        froms: [],
+        wheres: [],
+        values: [],
+        orders: [],
+        into: null
+      };
+      let queryTokensList = [];
+
+      let type = TYPE_NONE, queryType = null;
+      let tokens = this.lexicalAnalysis(sql);
+      for (let token of tokens) {
+        // console.log(type, token);
+        if (token === ";") {
+          type = TYPE_NONE;
+          queryTokensList.push([queryType, queryTokens]);
+          queryTokens = {
             columns: [],
             froms: [],
             wheres: [],
             values: [],
             orders: [],
             into: null
-        };
-        let queryTokensList = [];
-
-        let verse = "", quote = null, queryType;
-        let queryTypeDecided = false;
-        let type = TYPE_NONE;
-        for(let i = 0;i < sql.length;i++) {
-            const char = sql[i];
-            if(quote !== null) {
-                if(char === quote) {
-                    verse = quote + verse + quote;
-                    QueryParser.exeVerse(type, queryTokens, verse);
-                    verse = "";
-                    quote = null;
-                } else {
-                    verse += char;
-                }
-                continue;
-            }
-            if(char === '\'' || char === '"' || char === '`') {
-                quote = char;
-            } else if(['+', '-', '/', '*'].includes(char)) {
-                if(verse !== "") {
-                    QueryParser.exeVerse(type, queryTokens, verse);
-                    verse = "";
-                }
-                QueryParser.exeVerse(type, queryTokens, char);
-            } else if(char === ' ' || char === '\t' || char === '\r' || char === '\n') {
-                let verse2 = verse.toLowerCase();
-                if(verse2 === "select" || verse2 === "insert") {
-                    type = TYPE_COLUMN;
-                    queryType = verse2;
-                    queryTypeDecided = true;
-                } else if(verse2 === "from") {
-                    type = TYPE_FROM;
-                } else if(verse2 === "where") {
-                    type = TYPE_WHERE;
-                } else if(verse2 === "values") {
-                    type = TYPE_VALUES;
-                }  else if(verse2 === "order") {
-                    type = TYPE_ORDERS;
-                } else {
-                    if(verse !== "") {
-                        QueryParser.exeVerse(type, queryTokens, verse);
-                    }
-                }
-                verse = "";
-            } else if(char === ',' || char === '(' || char === ')') {
-                if(verse !== "") {
-                    QueryParser.exeVerse(type, queryTokens, verse);
-                }
-                QueryParser.exeVerse(type, queryTokens, char);
-                verse = "";
-            } else if(char === ';') {
-                if(verse !== "") {
-                    QueryParser.exeVerse(type, queryTokens, verse);
-                    verse = "";
-                }
-                queryTokensList.push([queryType, queryTokens]);
-                queryTokens = {
-                    columns: [],
-                    froms: [],
-                    wheres: [],
-                    values: [],
-                    orders: [],
-                    into: null
-                };
-            } else {
-                verse += char;
-            }
+          };
         }
-        if(verse !== "") {
-            QueryParser.exeVerse(queryType, queryTokens, verse);
+        if (type === TYPE_NONE) {
+          let verse2 = token.toLowerCase();
+          if(verse2 === "select" || verse2 === "insert") {
+            type = TYPE_COLUMN;
+            queryType = verse2;
+          }
+        } else if (type === TYPE_COLUMN) {
+          let verse2 = token.toLowerCase();
+          if (verse2 === "from") {
+            type = TYPE_FROM;
+          } else if (verse2 === "values") {
+            type = TYPE_VALUES;
+          } else {
+            QueryParser.exeVerse(type, queryTokens, token);
+          }
+        } else if (type === TYPE_FROM) {
+          let verse2 = token.toLowerCase();
+          if (verse2 === "where") {
+            type = TYPE_WHERE;
+          } else {
+            QueryParser.exeVerse(type, queryTokens, token);
+          }
+        } else if (type === TYPE_VALUES) {
+          let verse2 = token.toLowerCase();
+          QueryParser.exeVerse(type, queryTokens, token);
+        } else if (type === TYPE_WHERE) {
+          let verse2 = token.toLowerCase();
+          if (verse2 === "order") {
+            type = TYPE_ORDERS;
+          } else {
+            QueryParser.exeVerse(type, queryTokens, token);
+          }
+        } else if (type === TYPE_ORDERS) {
+          QueryParser.exeVerse(type, queryTokens, token);
         }
-        if (queryTokens.columns.length > 0 && queryTokens.values.length > 0) {
-            queryTokensList.push([queryType, queryTokens]);
-        }
-        return queryTokensList;
+      }
+      if (type !== TYPE_NONE) {
+        queryTokensList.push([queryType, queryTokens]);
+      }
+      return queryTokensList;
     }
 
     convert(sql)
