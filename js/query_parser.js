@@ -158,9 +158,23 @@ class QueryParser {
     lexicalAnalysis(sql)
     {
       let verseList = [];
-      let verse = "", quote = null;
+      let verse = "", quote = null, inOnelineComment = false;
       for(let i = 0;i < sql.length;i++) {
         const char = sql[i];
+
+        if (inOnelineComment) {
+          if (char === '\n') {
+            if (verse !== '') {
+              verseList.push(verse);
+            }
+            verse = "";
+
+            inOnelineComment = false;
+          } else {
+            verse += char
+          }
+          continue;
+        }
         if(quote !== null) {
           if(char === quote) {
             verse = quote + verse + quote;
@@ -171,6 +185,18 @@ class QueryParser {
             verse += char;
           }
           continue;
+        }
+        if (char === '-') {
+          const next = sql[i + 1];
+          if (next === '-') {
+            if (verse !== '') {
+              verseList.push(verse);
+            }
+            verse = "--";
+            inOnelineComment = true;
+            i += 1;
+            continue;
+          }
         }
         if(char === '\'' || char === '"' || char === '`') {
           quote = char;
@@ -222,8 +248,12 @@ class QueryParser {
 
       let type = TYPE_NONE, queryType = null;
       let tokens = this.lexicalAnalysis(sql);
+      console.log(tokens);
       for (let token of tokens) {
         // console.log(type, token);
+        if (token.startsWith("--")) {
+          continue;
+        }
         if (token === ";") {
           type = TYPE_NONE;
           queryTokensList.push([queryType, queryTokens]);
